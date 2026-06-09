@@ -1376,6 +1376,7 @@ function filterTable(table){
 // RENDER TABLES
 // ═══════════════════════════════════════════════════════════
 function renderTable(table, rows) {
+  if(table==='inventario'){ renderInventarioAgrupado(rows); return; }
   const tbody = document.getElementById('tbody-'+table);
   if(!tbody) return;
   if(!rows||!rows.length){ tbody.innerHTML=`<tr><td colspan="10">${emptyHTML('📭','Sin registros — haz clic en "+ Nuevo" para agregar.')}</td></tr>`; return; }
@@ -1432,8 +1433,6 @@ function renderTable(table, rows) {
   }
 
   if(table==='cobros') tbody.innerHTML=rows.map(r=>`<tr><td><strong>${r.descripcion}</strong></td><td>${empNombre(r.empresa_id)}</td><td style="font-weight:700">${fmt(r.valor)}</td><td>${estatusBadge(r.estado,'cobro')}</td><td>${fmtDate(r.fecha_vencimiento)}</td><td>${diasCobro(r.fecha_vencimiento,r.estado)}</td><td>${acts(r.id,r.descripcion,'cobros')}</td></tr>`).join('');
-
-  if(table==='inventario'){ renderInventarioAgrupado(rows); return; }
 
   if(table==='gastos') tbody.innerHTML=rows.map(r=>`<tr><td><strong>${r.descripcion}</strong></td><td>${badge(r.categoria||'—','blue')}</td><td style="font-weight:700;color:var(--danger)">${fmt(r.valor)}</td><td>${fmtDate(r.fecha)}</td><td>${r.empresa_id?empNombre(r.empresa_id):'—'}</td><td>${r.deducible?badge('✓ Sí','green'):badge('No','gray')}</td><td>${acts(r.id,r.descripcion,'gastos')}</td></tr>`).join('');
 
@@ -3304,6 +3303,8 @@ function abrirImportarInventario(){
   input.click();
 }
 
+let _pendingImport={nuevos:[],modificados:[]};
+
 function mostrarComparacionInventario(importadas){
   const actuales=cache.inventario||[];
   // Mapear por serial (key principal) o nombre+empresa
@@ -3349,13 +3350,95 @@ function mostrarComparacionInventario(importadas){
   if(!nuevos.length&&!modificados.length){
     html+='<div style="text-align:center;padding:20px;color:var(--gray)">✅ El inventario importado coincide perfectamente con la base de datos.</div>';
   }
-  html+='<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px">';
-  html+='<button onclick="closeModal()" class="btn btn-ghost">Cerrar</button>';
-  html+='</div></div>';
+  html+='</div>';
+
+  // Store pending data for import
+  _pendingImport={nuevos,modificados};
 
   document.getElementById('modal-title').textContent='Comparación Inventario Excel';
   document.getElementById('modal-body').innerHTML=html;
-  document.getElementById('modal-overlay').style.display='flex';
+
+  // Override footer buttons for import context
+  const footer=document.querySelector('.modal-footer');
+  if(footer){
+    footer.innerHTML='<button class="btn btn-ghost" onclick="closeModal()">Cancelar</button>'
+      +(modificados.length?'<button class="btn" style="background:#E65100;color:#fff" onclick="importarInventarioConCambios()">⚠️ Aplicar cambios ('+modificados.length+')</button>':'')
+      +(nuevos.length?'<button class="btn btn-primary" onclick="importarInventarioNuevos()">✅ Importar nuevos ('+nuevos.length+')</button>':'<button class="btn btn-primary" disabled>Sin equipos nuevos</button>');
+  }
+
+  document.getElementById('modal-overlay').classList.remove('hidden');
+}
+
+async function importarInventarioNuevos(){
+  if(!_pendingImport.nuevos.length) return;
+  const btn=document.querySelector('.modal-footer .btn-primary');
+  if(btn){btn.disabled=true;btn.textContent='⏳ Importando...';}
+  let ok=0,err=0;
+  // Find empresa by nombre
+  const empByNombre={};
+  (cache.empresas||[]).forEach(e=>{ empByNombre[(e.nombre||'').toLowerCase().trim()]=e.id; });
+  for(const row of _pendingImport.nuevos){
+    try{
+      const empNom=(row['Empresa']||'').toLowerCase().trim();
+      const empresa_id=empByNombre[empNom]||null;
+      const rec={
+        nombre: row['Nombre/ID']||row['Nombre']||'Sin nombre',
+        empresa_id,
+        tipo: row['Tipo']||null,
+        marca: row['Marca']||null,
+        modelo: row['Modelo']||null,
+        serial: row['Serial']||null,
+        procesador: row['Procesador']||null,
+        ram: row['RAM (GB)']?Number(row['RAM (GB)'])||null:null,
+        disco: row['Disco']||null,
+        sistema_operativo: row['S.O.']||null,
+        estado: row['Estado']||'Optimo',
+        usuario_responsable: row['Usuario/Resp.']||null,
+        ubicacion: row['Ubicación']||null,
+        fecha_compra: row['F. Compra']||null,
+        garantia_hasta: row['Garantía hasta']||null,
+        fecha_ult_mant: row['Último Mant.']||null,
+        fecha_prox_mant: row['Próx. Mant.']||null,
+        es_renting: row['Es Renting']==='Sí',
+        codigo_renting: row['Cód. Renting']||null,
+        observaciones: row['Observaciones']||null
+      };
+      // Remove nulls to avoid Supabase type errors
+      Object.keys(rec).forEach(k=>{ if(rec[k]===null||rec[k]==='') delete rec[k]; });
+      const saved=await dbInsert('inventario',rec);
+      if(saved&&saved.length) cache.inventario.unshift(saved[0]);
+      ok++;
+    }catch(e){ console.error('Import error:',e); err++; }
+  }
+  closeModal();
+  filterTable('inventario');
+  toast(ok+' equipo'+(ok!==1?'s':'')+' importado'+(ok!==1?'s':'')+' ✓'+(err?' | '+err+' errores':''),(err?'error':'success'));
+  _pendingImport={nuevos:[],modificados:[]};
+}
+
+async function importarInventarioConCambios(){
+  if(!_pendingImport.modificados.length) return;
+  const btn=document.querySelector('.modal-footer .btn[style*="E65100"]');
+  if(btn){btn.disabled=true;btn.textContent='⏳ Aplicando...';}
+  let ok=0;
+  for(const m of _pendingImport.modificados){
+    try{
+      const upd={};
+      if(m.cambios.some(c=>c.startsWith('Nombre:'))) upd.nombre=m.row['Nombre/ID']||m.row['Nombre'];
+      if(m.cambios.some(c=>c.startsWith('Estado:'))) upd.estado=m.row['Estado'];
+      if(m.cambios.some(c=>c.startsWith('Renting:'))) { upd.es_renting=m.row['Es Renting']==='Sí'; if(m.row['Cód. Renting']) upd.codigo_renting=m.row['Cód. Renting']; }
+      if(Object.keys(upd).length){
+        upd.updated_at=new Date().toISOString();
+        const saved=await dbUpdate('inventario',m.existing.id,upd);
+        if(saved&&saved.length){ const idx=cache.inventario.findIndex(r=>r.id===m.existing.id); if(idx!==-1) cache.inventario[idx]=saved[0]; }
+        ok++;
+      }
+    }catch(e){ console.error('Update error:',e); }
+  }
+  closeModal();
+  filterTable('inventario');
+  toast(ok+' equipo'+(ok!==1?'s':'')+' actualizado'+(ok!==1?'s':'')+' ✓','success');
+  _pendingImport={nuevos:[],modificados:[]};
 }
 
 
