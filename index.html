@@ -508,7 +508,7 @@ tr:last-child td{border-bottom:none}
   <button class="nav-item" data-page="gastos"><span class="nav-icon">📊</span>Gastos Trabajo</button>
 
   <div class="nav-section" id="nav-section-banco">Banco</div>
-  <button class="nav-item" id="nav-banco" data-page="banco"><span class="nav-icon">🏦</span>Mi Banco<span id="banco-sync-badge" style="display:none;margin-left:auto;background:var(--success);color:#fff;border-radius:10px;padding:1px 7px;font-size:11px;font-weight:700">●</span></button>
+  <button class="nav-item" id="nav-banco" data-page="banco"><span class="nav-icon">🏦</span>Extracto Bancario<span id="banco-sync-badge" style="display:none;margin-left:auto;background:var(--success);color:#fff;border-radius:10px;padding:1px 7px;font-size:11px;font-weight:700">●</span></button>
   <div class="nav-section">Personal</div>
   <button class="nav-item" data-page="finanzas" id="nav-finanzas"><span class="nav-icon">🔒</span>Finanzas Personales<span class="lock-badge" id="lock-icon">🔒</span></button>
   <button class="nav-item" data-page="vehiculo"><span class="nav-icon">🚗</span>Gastos Carro / Moto</button>
@@ -599,7 +599,7 @@ tr:last-child td{border-bottom:none}
 
     <!-- INVENTARIO -->
     <div id="page-inventario" class="section-page">
-      <div class="page-header"><h2>🖥 Inventario TI</h2><div style="display:flex;gap:8px"><button class="btn" style="background:#00897B;color:#fff" onclick="exportarInventario()">📥 Exportar Excel</button><button class="btn btn-primary" onclick="openForm('inventario')">+ Nuevo Equipo</button></div></div>
+      <div class="page-header"><h2>🖥 Inventario TI</h2><div style="display:flex;gap:8px"><button class="btn" style="background:#00897B;color:#fff" onclick="exportarInventario()">📥 Exportar Excel</button><button class="btn" style="background:#1565C0;color:#fff" onclick="abrirImportarInventario()">📤 Importar/Comparar</button><button class="btn btn-primary" onclick="openForm('inventario')">+ Nuevo Equipo</button></div></div>
       <div class="card"><div class="card-body">
         <div class="toolbar"><div class="toolbar-left">
           <div class="search-box">🔍<input type="text" id="search-inventario" placeholder="Buscar equipo..." oninput="filterTable('inventario')"></div>
@@ -630,20 +630,13 @@ tr:last-child td{border-bottom:none}
         <h2>🔒 Finanzas Personales</h2>
         <div style="display:flex;gap:6px;flex-wrap:wrap">
           <button class="btn btn-ghost btn-sm" onclick="lockFinanzas()">🔒 Bloquear</button>
-          <button class="btn btn-ghost btn-sm" onclick="abrirImportarExtracto()" style="color:var(--primary);border-color:var(--primary)">📥 Importar extracto</button>
           <button class="btn btn-primary btn-sm" onclick="openForm('finanzas')">+ Registrar</button>
         </div>
       </div>
 
-      <!-- BANNER recordatorio importar -->
-      <div id="banner-importar" style="display:none;background:var(--primary-light);border:1px solid var(--primary);border-radius:10px;padding:11px 16px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;gap:10px">
-        <span style="font-size:13px;color:var(--primary-dark)">💡 <strong>¿Ya importaste el extracto del mes pasado?</strong></span>
-        <div style="display:flex;gap:6px">
-          <button class="btn btn-primary btn-sm" onclick="abrirImportarExtracto()">📥 Importar</button>
-          <button class="btn btn-ghost btn-sm" onclick="this.parentElement.parentElement.style.display='none'">✕</button>
-        </div>
-      </div>
 
+
+      <div class="summary-cards" id="finanzas-summary" style="margin-bottom:14px"></div>
       <!-- RESUMEN VISUAL -->
       <div id="finanzas-dashboard"></div>
 
@@ -777,6 +770,43 @@ tr:last-child td{border-bottom:none}
           <button class="btn btn-primary" onclick="openEmpForm('novedades')">+ Agregar Novedad</button>
         </div>
         <div id="emp-novedades-list"></div>
+      </div>
+    </div>
+
+
+    <!-- EXTRACTO BANCARIO -->
+    <div id="page-banco" class="section-page">
+      <div class="page-header">
+        <h2>🏦 Extracto Bancario</h2>
+        <button class="btn btn-primary" onclick="abrirImportarExtracto()">📥 Importar Extracto</button>
+      </div>
+      <div class="tabs" id="banco-tabs">
+        <button class="tab-btn active" onclick="switchBancoTab('movimientos')">📋 Movimientos</button>
+        <button class="tab-btn" onclick="switchBancoTab('conciliacion')">🔍 Conciliación</button>
+      </div>
+      <!-- Tab Movimientos -->
+      <div id="banco-tab-movimientos">
+        <div class="summary-cards" id="banco-summary"></div>
+        <div class="card">
+          <div class="card-body">
+            <div class="toolbar"><div class="toolbar-left">
+              <div class="search-box">🔍<input type="text" id="search-banco" placeholder="Buscar movimiento..." oninput="renderExtractoBancario()"></div>
+              <select class="filter-select" id="filter-banco-mes" onchange="renderExtractoBancario()"><option value="">Todos los meses</option></select>
+              <select class="filter-select" id="filter-banco-tipo" onchange="renderExtractoBancario()"><option value="">Todos</option><option>Ingreso</option><option>Gasto</option></select>
+              <select class="filter-select" id="filter-banco-estado" onchange="renderExtractoBancario()"><option value="">Cruzado / Sin cruzar</option><option value="conciliado">✅ Cruzado</option><option value="pendiente">⏳ Sin cruzar</option></select>
+            </div></div>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>Fecha</th><th>Descripción</th><th>Tipo</th><th>Categoría</th><th style="text-align:right">Valor</th><th>Estado</th></tr></thead>
+                <tbody id="tbody-banco"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- Tab Conciliación -->
+      <div id="banco-tab-conciliacion" style="display:none">
+        <div id="conciliacion-content"></div>
       </div>
     </div>
 
@@ -1214,7 +1244,7 @@ function navigate(page) {
   pageEl.classList.add('active');
   const navEl = document.querySelector(`[data-page="${page}"]`);
   if(navEl) navEl.classList.add('active');
-  const titles={dashboard:'Dashboard',empresas:'Empresas / Clientes',visitas:'Visitas Técnicas',cobros:'Cobros Pendientes',inventario:'Inventario TI',gastos:'Gastos del Trabajo',finanzas:'Finanzas Personales Santi 🔒',vehiculo:'Gastos Carro / Moto',recordatorios:'Recordatorios',estado:'Estado Mensual Real',novedades:'Registro de Novedades','mis-actividades':'Mis Actividades','empresa-detalle':'Detalle Empresa',reporte:'Reporte de Servicio'};
+  const titles={dashboard:'Dashboard',banco:'Extracto Bancario',empresas:'Empresas / Clientes',visitas:'Visitas Técnicas',cobros:'Cobros Pendientes',inventario:'Inventario TI',gastos:'Gastos del Trabajo',finanzas:'Finanzas Personales Santi 🔒',vehiculo:'Gastos Carro / Moto',recordatorios:'Recordatorios',estado:'Estado Mensual Real',novedades:'Registro de Novedades','mis-actividades':'Mis Actividades','empresa-detalle':'Detalle Empresa',reporte:'Reporte de Servicio'};
   document.getElementById('page-title').textContent = titles[page]||page;
   curPage=page;
   renderPage(page);
@@ -1240,7 +1270,7 @@ document.addEventListener('keydown', function(e){ if(e.key==='Escape'){ cerrarIm
 // RENDER ROUTER
 // ═══════════════════════════════════════════════════════════
 function renderPage(page) {
-  if(page==='banco'){ belvoUpdateUI(); return; }
+  if(page==='banco'){ if(!cache.finanzas||!cache.finanzas.length) loadAll('finanzas').then(renderExtractoBancario); else renderExtractoBancario(); return; }
   if(page==='tareas'){ renderTareas(); return; }
   if(page==='repuestos'){ renderRepuestos(); return; }
   if(page==='dashboard'){ renderDashboard(); return; }
@@ -1251,7 +1281,49 @@ function renderPage(page) {
   if(page==='novedades'){ renderTable('novedades', cache.novedades); return; }
   if(page==='reporte') return;
   // For standard tables, re-filter to force visual refresh
-  if(['visitas','cobros','inventario','gastos','vehiculo','finanzas','novedades','actividades_tecnico','repuestos'].includes(page)){
+  if(page==='inventario'){
+    var invContainer = document.getElementById('inventario-agrupado');
+    if(invContainer) invContainer.innerHTML = '<div style="text-align:center;padding:30px;color:var(--gray)">⏳ Cargando inventario...</div>';
+    Promise.all([loadAll('inventario'), loadAll('empresas')]).then(function(){
+      // Poblar select de empresas
+      var sel = document.getElementById('filter-inventario-empresa');
+      if(sel){
+        sel.value = '';
+        while(sel.options.length > 1) sel.remove(1);
+        var usadas = new Set((cache.inventario||[]).map(function(r){ return r.empresa_id; }).filter(Boolean));
+        (cache.empresas||[])
+          .filter(function(e){ return usadas.has(e.id); })
+          .sort(function(a,b){ return (a.nombre||'').localeCompare(b.nombre||''); })
+          .forEach(function(e){
+            var o = document.createElement('option');
+            o.value = e.id; o.textContent = e.nombre;
+            sel.appendChild(o);
+          });
+        sel.selectedIndex = 0; // siempre "Todas las empresas" por defecto
+      }
+      if(!cache.inventario || cache.inventario.length === 0){
+        if(invContainer) invContainer.innerHTML =
+          '<div style="text-align:center;padding:40px;color:var(--gray)">' +
+          '<div style="font-size:36px;margin-bottom:10px">📭</div>' +
+          '<p style="font-size:14px;font-weight:700">Sin equipos en inventario</p>' +
+          '<p style="font-size:12px;margin-top:4px">Usa el botón "+ Nuevo Equipo" para agregar equipos.</p>' +
+          '<button onclick="renderPage(&quot;inventario&quot;)" style="margin-top:12px;padding:8px 16px;background:var(--primary);color:#fff;border:none;border-radius:8px;cursor:pointer;font-weight:600">🔄 Reintentar</button>' +
+          '</div>';
+      } else {
+        filterTable('inventario');
+      }
+    }).catch(function(e){
+      if(invContainer) invContainer.innerHTML =
+        '<div style="text-align:center;padding:40px;color:var(--danger)">' +
+        '<div style="font-size:36px;margin-bottom:10px">⚠️</div>' +
+        '<p style="font-size:14px;font-weight:700">Error al cargar inventario</p>' +
+        '<p style="font-size:12px;margin-top:4px">' + (e.message||'Error de conexión') + '</p>' +
+        '<button onclick="renderPage(&quot;inventario&quot;)" style="margin-top:12px;padding:8px 16px;background:var(--primary);color:#fff;border:none;border-radius:8px;cursor:pointer;font-weight:600">🔄 Reintentar</button>' +
+        '</div>';
+    });
+    return;
+  }
+  if(['visitas','cobros','gastos','vehiculo','finanzas','novedades','actividades_tecnico','repuestos'].includes(page)){
     filterTable(page); return;
   }
   // Apply helper column visibility
@@ -1270,7 +1342,7 @@ function renderPage(page) {
   renderTable(page, cache[page]);
   if(page==='cobros') renderSummary('cobros');
   if(page==='gastos') renderSummary('gastos');
-  if(page==='finanzas'){ renderSummary('finanzas'); checkBannerImportar(); renderFinanzasDashboard(); }
+  if(page==='finanzas'){ renderSummary('finanzas'); renderFinanzasDashboard(); }
   if(page==='vehiculo') renderSummary('vehiculo');
 }
 function filterTable(table){
@@ -1290,11 +1362,14 @@ function filterTable(table){
   const renting=document.getElementById('filter-inventario-renting')?.value||'';
   if(renting==='si') rows=rows.filter(r=>r.es_renting);
   if(renting==='no') rows=rows.filter(r=>!r.es_renting);
-  renderTable(table,rows);
   if(table==='inventario'){
     const sel=document.getElementById('filter-inventario-empresa');
-    if(sel&&sel.options.length<=1){ const usadas=new Set((cache.inventario||[]).map(r=>r.empresa_id).filter(Boolean)); cache.empresas.filter(e=>usadas.has(e.id)).forEach(function(e){ const o=document.createElement('option'); o.value=e.id; o.textContent=e.nombre; sel.appendChild(o); }); }
+    if(sel&&sel.options.length<=1){
+      const usadas=new Set((cache.inventario||[]).map(r=>r.empresa_id).filter(Boolean));
+      (cache.empresas||[]).filter(e=>usadas.has(e.id)).sort((a,b)=>(a.nombre||'').localeCompare(b.nombre||'')).forEach(function(e){ const o=document.createElement('option'); o.value=e.id; o.textContent=e.nombre; sel.appendChild(o); });
+    }
   }
+  renderTable(table,rows);
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -1398,7 +1473,7 @@ function renderSummary(page) {
     const ingresos=mes.filter(f=>f.tipo==='Ingreso').reduce((s,f)=>s+(+f.valor||0),0);
     const gastos=mes.filter(f=>f.tipo==='Gasto').reduce((s,f)=>s+(+f.valor||0),0);
     const balance=ingresos-gastos;
-    document.getElementById('finanzas-summary').innerHTML=
+    var fSumEl=document.getElementById('finanzas-summary'); if(!fSumEl) return; fSumEl.innerHTML=
       statCard('Ingresos del Mes',fmt(ingresos),'mes actual','green','⬆')+
       statCard('Gastos del Mes',fmt(gastos),'mes actual','red','⬇')+
       statCard('Balance Mensual',fmt(balance),balance>=0?'Positivo ✅':'Negativo ⚠',balance>=0?'green':'red','💰');
@@ -1467,6 +1542,7 @@ function getMesData(anio,mes){
   return{ing:cobMes+ingPers,gast:gastTrab+gastPers+gastVeh,cobMes:cobMes,ingPers:ingPers,gastTrab:gastTrab,gastPers:gastPers,gastVeh:gastVeh,ini:ini,fin:fin};
 }
 function renderEstado(){
+  renderResumenAnual();
   var sel=document.getElementById('estado-anio-sel');
   if(sel&&sel.options.length===0){
     var anios=new Set([String(new Date().getFullYear()),String(new Date().getFullYear()-1)]);
@@ -1503,12 +1579,34 @@ function renderEstadoTabla(){
   el.innerHTML=h+'</tbody></table><p style="font-size:11px;color:#999;text-align:center;padding:8px">Toca cualquier mes para ver el detalle</p>';
 }
 
+
+// ═══════════════════════════════════════════════════════════
+// ESTADO MENSUAL — TAB SWITCHER
+// ═══════════════════════════════════════════════════════════
+function switchEstadoTab(tab){
+  ['anual','mes','clientes'].forEach(function(t){
+    var el = document.getElementById('estado-tab-'+t);
+    if(el) el.style.display = t===tab ? '' : 'none';
+  });
+  // Actualizar botones activos
+  var tabBtns = document.querySelectorAll('#page-estado .tabs .tab-btn');
+  tabBtns.forEach(function(b, i){
+    b.classList.toggle('active',
+      (i===0&&tab==='anual') || (i===1&&tab==='mes') || (i===2&&tab==='clientes')
+    );
+  });
+  if(tab==='mes'){
+    renderEstadoMesDetalle(estadoMes.getFullYear(), estadoMes.getMonth());
+  } else if(tab==='clientes'){
+    renderEstadoClientes();
+  } else {
+    renderEstadoTabla();
+  }
+}
+
 function irAMes(anio,mes){
   estadoMes=new Date(anio,mes,1);
-  var wrap=document.getElementById('estado-detalle-mes-wrap');
-  wrap.style.display='';
-  setTimeout(function(){wrap.scrollIntoView({behavior:'smooth',block:'start'});},50);
-  renderEstadoMesDetalle(anio,mes);
+  switchEstadoTab('mes');
 }
 
 function renderEstadoMesDetalle(anio,mes){
@@ -1750,9 +1848,9 @@ function openForm(table, id) {
     <div class="form-group"><label class="form-label">Próximo Mantenimiento</label><input name="fecha_prox_mant" type="date" class="form-input" value="${rec?.fecha_prox_mant||''}"></div>
     <div class="form-group"><label class="form-label">Usuario / Responsable</label><input name="usuario_responsable" class="form-input" value="${rec?.usuario_responsable||''}"></div>
     <div class="form-group"><label class="form-label">Ubicación</label><input name="ubicacion" class="form-input" value="${rec?.ubicacion||''}"></div>
-    <div class="form-group span2" style="display:flex;align-items:center;gap:12px;padding:8px 0"><input name="es_renting" id="chk-es-renting" type="checkbox" style="width:18px;height:18px;cursor:pointer" ${rec?.es_renting?'checked':''} onchange="document.getElementById('renting-code-wrap').style.display=this.checked?''  :'none'"><label style="font-weight:700;cursor:pointer" for="chk-es-renting">¿Es equipo en Renting?</label></div>
-    <div class="form-group span2" id="renting-code-wrap" style="${rec?.es_renting?''  :'display:none'}"><label class="form-label">Código de Renting</label><input name="codigo_renting" class="form-input" placeholder="Ej: RENT-2024-001" value="${rec?.codigo_renting||''  }"></div>
     <div class="form-group span2"><label class="form-label">Observaciones</label><textarea name="observaciones" class="form-textarea">${rec?.observaciones||''}</textarea></div>
+    <div class="form-group span2" style="display:flex;align-items:center;gap:12px;padding:8px 0"><input name="es_renting" id="chk-es-renting" type="checkbox" style="width:18px;height:18px;cursor:pointer" ${rec?.es_renting?'checked':''} onchange="document.getElementById('renting-code-wrap').style.display=this.checked?'':'none'"><label style="font-weight:700;cursor:pointer" for="chk-es-renting">¿Es equipo en Renting?</label></div>
+    <div class="form-group span2" id="renting-code-wrap" style="${rec?.es_renting?'':'display:none'}"><label class="form-label">Código de Renting</label><input name="codigo_renting" class="form-input" placeholder="Ej: RENT-2024-001" value="${rec?.codigo_renting||''}"></div>
   </form>`;
 
   if(table==='gastos') html=`<form id="record-form" class="form-grid">
@@ -1895,7 +1993,7 @@ function doLogin(){
     isHelperMode = (found.role !== 'admin');
     document.getElementById('login-screen').classList.add('hidden');
   // Guardar sesión por 8 horas
-  localStorage.setItem('cti_session', JSON.stringify({userId: u.id, time: Date.now()}));
+  localStorage.setItem('cti_session', JSON.stringify({userId: found.id, time: Date.now()}));
     init();
   } else {
     errEl.textContent = '❌ Usuario o contraseña incorrectos';
@@ -2439,7 +2537,11 @@ function generarReporteEmpresa(empId){
   if(inv.length){
     const crit = inv.filter(i=>i.estado==='Critico');
     const ok   = inv.filter(i=>i.estado==='Optimo');
-    body += seccion('🖥','Equipos','<span style="margin-right:12px">Total: <strong>'+inv.length+'</strong></span><span style="margin-right:12px;color:var(--success)">✅ Óptimos: <strong>'+ok.length+'</strong></span>'+(crit.length?'<span style="color:var(--danger)">⚠️ Críticos: <strong>'+crit.length+'</strong></span>':''));
+    const rentInv = inv.filter(i=>i.es_renting);
+    const resumen = '<span style="margin-right:12px">Total: <strong>'+inv.length+'</strong></span><span style="margin-right:12px;color:var(--success)">✅ Óptimos: <strong>'+ok.length+'</strong></span>'+(crit.length?'<span style="color:var(--danger);margin-right:12px">⚠️ Críticos: <strong>'+crit.length+'</strong></span>':'')+(rentInv.length?'<span style="color:#2E7D32">📋 Renting: <strong>'+rentInv.length+'</strong></span>':'');
+    const invRows = inv.map(i=>'<tr><td style="padding:5px 8px"><strong>'+i.nombre+'</strong>'+(i.serial?'<br><small style="color:var(--gray)">S/N: '+i.serial+'</small>':'')+'</td><td style="padding:5px 8px">'+badge(i.tipo||'—','blue')+'</td><td style="padding:5px 8px">'+(i.marca||'—')+' '+(i.modelo||'')+'</td><td style="padding:5px 8px">'+estatusBadge(i.estado,'inv')+'</td><td style="padding:5px 8px">'+(i.usuario_responsable||'—')+'</td><td style="padding:5px 8px">'+(i.es_renting?'<span style="background:#E8F5E9;color:#2E7D32;font-size:11px;font-weight:700;padding:2px 5px;border-radius:6px">📋 '+(i.codigo_renting||'RENT')+'</span>':'—')+'</td><td style="padding:5px 8px">'+fmtDate(i.fecha_prox_mant)+'</td></tr>').join('');
+    body += seccion('🖥','Inventario de Equipos',resumen+'<div style="margin-top:8px"><table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr><th style="text-align:left;padding:5px 8px;background:var(--light)">Nombre/S.N.</th><th style="padding:5px 8px;background:var(--light)">Tipo</th><th style="padding:5px 8px;background:var(--light)">Marca/Modelo</th><th style="padding:5px 8px;background:var(--light)">Estado</th><th style="padding:5px 8px;background:var(--light)">Responsable</th><th style="padding:5px 8px;background:var(--light)">Renting</th><th style="padding:5px 8px;background:var(--light)">Próx. Mant.</th></tr></thead><tbody>'+invRows+'</tbody></table></div>');
+    if(inv.length) txt += '🖥 INVENTARIO DETALLADO\n'; inv.forEach(i=>{ txt += '  • '+i.nombre+(i.tipo?' ['+i.tipo+']':'')+(i.serial?' S/N:'+i.serial:'')+(i.estado?' — '+i.estado:'')+(i.es_renting?' [RENTING'+(i.codigo_renting?' '+i.codigo_renting:'')+']':'')+'\n'; }); txt += '\n';
   }
 
   // Share buttons
@@ -3041,6 +3143,43 @@ function renderInventarioAgrupado(rows){
     grupos[eid].push(r);
   });
   const empIds=Object.keys(grupos).sort((a,b)=>empNombre(a).localeCompare(empNombre(b)));
+
+  // Helper: tabla de red para cada empresa
+  const redHtml = function(eid){
+    var dispositivos = (cache.empresa_red||[]).filter(function(r){ return r.empresa_id===eid; });
+    if(!dispositivos.length) return '';
+    return '<div style="margin:10px 0 6px;padding:10px 12px;background:linear-gradient(135deg,#E8F0FE,#F0F4FF);border-radius:8px;border-left:3px solid var(--primary)">'
+      +'<div style="font-size:11px;font-weight:800;color:var(--primary);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">🌐 Red e IPs</div>'
+      +'<div style="display:flex;flex-wrap:wrap;gap:8px">'
+      +dispositivos.map(function(d){
+        return '<div style="background:#fff;border-radius:6px;padding:7px 10px;border:1px solid var(--border);min-width:180px;flex:1">'
+          +'<div style="font-size:12px;font-weight:700;color:var(--dark)">'+d.nombre+'</div>'
+          +'<div style="font-size:11px;color:var(--gray)">'+( d.tipo||'')+'</div>'
+          +(d.ip?'<div style="font-size:12px;font-family:monospace;background:#F0F2F5;padding:2px 6px;border-radius:4px;margin-top:4px;display:inline-block">'+d.ip+'</div>':'')
+          +(d.usuario?'<div style="font-size:11px;color:var(--gray);margin-top:2px">👤 '+d.usuario+'</div>':'')
+          +(d.url?'<div style="margin-top:3px"><a href="'+d.url+'" target="_blank" style="font-size:11px;color:var(--primary)">🔗 Admin</a></div>':'')
+          +'</div>';
+      }).join('')
+      +'</div></div>';
+  };
+
+  const credHtml=function(eid){
+    var creds=(cache.credenciales||[]).filter(function(r){ return r.empresa_id===eid; });
+    if(!creds.length) return '';
+    return '<div style="margin:6px 0 10px;padding:10px 12px;background:linear-gradient(135deg,#FFF8E1,#FFFDE7);border-radius:8px;border-left:3px solid #F9A825">'
+      +'<div style="font-size:11px;font-weight:800;color:#F57F17;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">🔑 Credenciales</div>'
+      +'<div style="display:flex;flex-wrap:wrap;gap:8px">'
+      +creds.map(function(c){
+        return '<div style="background:#fff;border-radius:6px;padding:7px 10px;border:1px solid var(--border);min-width:170px;flex:1">'
+          +'<div style="font-size:12px;font-weight:700;color:var(--dark)">'+(c.servicio||c.nombre||'—')+'</div>'
+          +(c.usuario?'<div style="font-size:11px;color:var(--gray);margin-top:2px">👤 '+c.usuario+'</div>':'')
+          +(c.password?'<div style="font-size:11px;font-family:monospace;background:#F5F5F5;padding:2px 6px;border-radius:4px;margin-top:3px">🔒 ••••••</div>':'')
+          +(c.url?'<div style="margin-top:3px"><a href="'+c.url+'" target="_blank" style="font-size:11px;color:var(--primary)">🔗 Acceso</a></div>':'')
+          +'</div>';
+      }).join('')
+      +'</div></div>';
+  };
+
   const actsHtml=(id,name)=>{
     if(isHelperMode) return '';
     const sn=(name||'').replace(/'/g,'__SQ__');
@@ -3054,31 +3193,37 @@ function renderInventarioAgrupado(rows){
     const nombre=empNombre(eid)||'Sin empresa';
     const alertas=equipos.filter(r=>{const d=diffDays(r.fecha_prox_mant);return d!==null&&d<=15;}).length;
     const criticos=equipos.filter(r=>r.estado==='Critico').length;
-    const badgesExtra=(alertas?'<span style="background:#FCE8E6;color:#B71C1C;font-size:11px;font-weight:700;padding:2px 7px;border-radius:10px;margin-left:4px">⚠️ '+alertas+' mant.</span>':'')+
-      (criticos?'<span style="background:#FCE8E6;color:#B71C1C;font-size:11px;font-weight:700;padding:2px 7px;border-radius:10px;margin-left:4px">🔴 '+criticos+' crítico</span>':'');
     const rentingCount=equipos.filter(r=>r.es_renting).length;
-    if(rentingCount) badgesExtra+='<span style="background:#E8F5E9;color:#1B5E20;font-size:11px;font-weight:700;padding:2px 7px;border-radius:10px;margin-left:4px">📋 '+rentingCount+' renting</span>';
+    const badgesExtra=(alertas?'<span style="background:#FCE8E6;color:#B71C1C;font-size:11px;font-weight:700;padding:2px 7px;border-radius:10px;margin-left:4px">⚠️ '+alertas+' mant.</span>':'')+
+      (criticos?'<span style="background:#FCE8E6;color:#B71C1C;font-size:11px;font-weight:700;padding:2px 7px;border-radius:10px;margin-left:4px">🔴 '+criticos+' crítico</span>':'')+
+      (rentingCount?'<span style="background:#E8F5E9;color:#2E7D32;font-size:11px;font-weight:700;padding:2px 7px;border-radius:10px;margin-left:4px">📋 '+rentingCount+' renting</span>':'');
+    const reporteBtn='<button onclick="event.stopPropagation();generarReporteEmpresa(\''+eid+'\')" style="margin-left:auto;background:#1565C0;color:#fff;border:none;border-radius:6px;padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer">📄 Reporte cliente</button>';
     const rowsHtml=equipos.map(r=>'<tr>'+
       '<td><strong>'+r.nombre+'</strong>'+(r.serial?'<br><small style="color:var(--gray)">S/N: '+r.serial+'</small>':'')+'</td>'+
       '<td>'+badge(r.tipo||'—','blue')+'</td>'+
       '<td>'+(r.marca||'—')+' '+(r.modelo||'')+'</td>'+
       '<td>'+estatusBadge(r.estado,'inv')+'</td>'+
-      '<td>'+(r.es_renting?'<span style="background:#E8F5E9;color:#1B5E20;font-size:11px;font-weight:700;padding:2px 6px;border-radius:8px">📋 RENTING'+(r.codigo_renting?' — '+r.codigo_renting:'')+'</span>':'—')+'</td>'+
       '<td>'+fmtDate(r.fecha_prox_mant)+'</td>'+
       '<td>'+alertaMant(r.fecha_prox_mant)+'</td>'+
+      '<td>'+(r.es_renting?'<span style="background:#E8F5E9;color:#2E7D32;font-size:11px;font-weight:700;padding:2px 6px;border-radius:8px">📋 RENT</span>'+(r.codigo_renting?'<br><small style="color:var(--gray)">'+r.codigo_renting+'</small>':''):'—')+'</td>'+
       '<td>'+actsHtml(r.id,r.nombre)+'</td>'+
       '</tr>').join('');
+    var netInfo = redHtml(eid);
+    var credInfo = credHtml(eid);
     return '<div class="inv-empresa-body">'+
       '<div class="inv-empresa-header" onclick="toggleInvGrupo(this)">'+
-        '<div class="inv-empresa-title">🏢 '+nombre+
+        '<div class="inv-empresa-title" style="display:flex;align-items:center;flex-wrap:wrap;gap:4px;width:100%">🏢 '+nombre+
           '<span class="inv-empresa-badge">'+equipos.length+' equipo'+(equipos.length!==1?'s':'')+'</span>'+
           badgesExtra+
+          reporteBtn+
         '</div>'+
         '<span class="inv-empresa-toggle open">▼</span>'+
       '</div>'+
       '<div class="inv-grupo-content">'+
+        netInfo+
+        credInfo+
         '<div class="table-wrap"><table>'+
-          '<thead><tr><th>Nombre / S/N</th><th>Tipo</th><th>Marca/Modelo</th><th>Estado</th><th>Renting</th><th>Próx. Mant.</th><th>Alerta</th><th></th></tr></thead>'+
+          '<thead><tr><th>Nombre / S/N</th><th>Tipo</th><th>Marca/Modelo</th><th>Estado</th><th>Próx. Mant.</th><th>Alerta</th><th>Renting</th><th></th></tr></thead>'+
           '<tbody>'+rowsHtml+'</tbody>'+
         '</table></div>'+
       '</div>'+
@@ -3093,10 +3238,14 @@ function toggleInvGrupo(header){
   toggle.classList.toggle('open',!isOpen);
 }
 
+// ═══════════════════════════════════════════════════════════
+// INVENTARIO — EXPORTAR E IMPORTAR EXCEL
+// ═══════════════════════════════════════════════════════════
 function exportarInventario(){
   try{
     const rows=cache.inventario||[];
     if(!rows.length){toast('No hay equipos para exportar','error');return;}
+    const fecha=new Date().toISOString().slice(0,10);
     const data=rows.map(r=>({
       'Empresa': empNombre(r.empresa_id)||'Sin empresa',
       'Nombre/ID': r.nombre||'',
@@ -3107,271 +3256,109 @@ function exportarInventario(){
       'Procesador': r.procesador||'',
       'RAM (GB)': r.ram||'',
       'Disco': r.disco||'',
-      'Sistema Operativo': r.sistema_operativo||'',
+      'S.O.': r.sistema_operativo||'',
       'Estado': r.estado||'',
-      'Usuario/Responsable': r.usuario_responsable||'',
+      'Usuario/Resp.': r.usuario_responsable||'',
       'Ubicación': r.ubicacion||'',
+      'F. Compra': r.fecha_compra||'',
+      'Garantía hasta': r.garantia_hasta||'',
+      'Último Mant.': r.fecha_ult_mant||'',
+      'Próx. Mant.': r.fecha_prox_mant||'',
       'Es Renting': r.es_renting?'Sí':'No',
-      'Código Renting': r.codigo_renting||'',
-      'Fecha Compra': r.fecha_compra||'',
-      'Garantía Hasta': r.garantia_hasta||'',
-      'Últ. Mantenimiento': r.fecha_ult_mant||'',
-      'Próx. Mantenimiento': r.fecha_prox_mant||'',
+      'Cód. Renting': r.codigo_renting||'',
       'Observaciones': r.observaciones||''
     }));
     const ws=XLSX.utils.json_to_sheet(data);
-    // Column widths
-    ws['!cols']=[{wch:22},{wch:22},{wch:12},{wch:14},{wch:16},{wch:16},{wch:18},{wch:8},{wch:14},{wch:16},{wch:14},{wch:20},{wch:16},{wch:10},{wch:16},{wch:14},{wch:14},{wch:16},{wch:16},{wch:30}];
+    ws['!cols']=[{wch:22},{wch:22},{wch:12},{wch:14},{wch:16},{wch:16},{wch:18},{wch:8},{wch:14},{wch:14},{wch:14},{wch:18},{wch:14},{wch:12},{wch:12},{wch:12},{wch:12},{wch:10},{wch:14},{wch:26}];
     const wb=XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb,ws,'Inventario TI');
-    // Second sheet: only renting
     const renting=rows.filter(r=>r.es_renting);
     if(renting.length){
-      const dataR=renting.map(r=>({
-        'Empresa': empNombre(r.empresa_id)||'Sin empresa',
-        'Nombre/ID': r.nombre||'',
-        'Tipo': r.tipo||'',
-        'Marca': r.marca||'',
-        'Modelo': r.modelo||'',
-        'Serial': r.serial||'',
-        'Código Renting': r.codigo_renting||'',
-        'Estado': r.estado||'',
-        'Usuario/Responsable': r.usuario_responsable||'',
-        'Fecha Compra': r.fecha_compra||'',
-        'Garantía Hasta': r.garantia_hasta||'',
-        'Próx. Mantenimiento': r.fecha_prox_mant||''
-      }));
+      const dataR=renting.map(r=>({'Empresa':empNombre(r.empresa_id)||'Sin empresa','Nombre/ID':r.nombre||'','Tipo':r.tipo||'','Marca':r.marca||'','Modelo':r.modelo||'','Serial':r.serial||'','Estado':r.estado||'','Cód. Renting':r.codigo_renting||'','Próx. Mant.':r.fecha_prox_mant||''}));
       const wsR=XLSX.utils.json_to_sheet(dataR);
-      wsR['!cols']=[{wch:22},{wch:22},{wch:12},{wch:14},{wch:16},{wch:16},{wch:16},{wch:14},{wch:20},{wch:14},{wch:14},{wch:16}];
+      wsR['!cols']=[{wch:22},{wch:22},{wch:12},{wch:14},{wch:16},{wch:16},{wch:14},{wch:16},{wch:12}];
       XLSX.utils.book_append_sheet(wb,wsR,'Solo Renting');
     }
-    const fecha=new Date().toISOString().split('T')[0];
     XLSX.writeFile(wb,'Inventario_TI_'+fecha+'.xlsx');
     toast('Excel exportado ✓');
   }catch(e){toast('Error al exportar: '+e.message,'error');}
 }
 
-// ═══════════════════════════════════════════════════════════
-// BELVO — INTEGRACIÓN BANCARIA
-// ═══════════════════════════════════════════════════════════
-const BELVO_FN = '/.netlify/functions/belvo';
-
-async function belvoAPI(action, params={}) {
-  const r = await fetch(BELVO_FN, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ action, ...params })
-  });
-  return r.json();
+function abrirImportarInventario(){
+  const input=document.createElement('input');
+  input.type='file'; input.accept='.xlsx,.xls';
+  input.onchange=function(e){
+    const file=e.target.files[0]; if(!file) return;
+    const reader=new FileReader();
+    reader.onload=function(ev){
+      try{
+        const wb=XLSX.read(ev.target.result,{type:'array'});
+        const ws=wb.Sheets[wb.SheetNames[0]];
+        const importadas=XLSX.utils.sheet_to_json(ws,{defval:''});
+        if(!importadas.length){toast('El archivo está vacío','error');return;}
+        mostrarComparacionInventario(importadas);
+      }catch(err){toast('Error leyendo Excel: '+err.message,'error');}
+    };
+    reader.readAsArrayBuffer(file);
+  };
+  input.click();
 }
 
-function belvoGetLinkId() { return localStorage.getItem('belvo_link_id'); }
-function belvoSetLink(linkId, bankName, account) {
-  localStorage.setItem('belvo_link_id', linkId);
-  localStorage.setItem('belvo_bank_name', bankName||'Banco');
-  localStorage.setItem('belvo_bank_account', account||'');
-  localStorage.setItem('belvo_last_sync', new Date().toLocaleString('es-CO'));
-}
+function mostrarComparacionInventario(importadas){
+  const actuales=cache.inventario||[];
+  // Mapear por serial (key principal) o nombre+empresa
+  const porSerial={};
+  actuales.forEach(r=>{ if(r.serial) porSerial[r.serial.trim().toLowerCase()]=r; });
 
-function checkBannerImportar(){
-  const banner = document.getElementById('banner-importar');
-  if(!banner) return;
-  const dia = new Date().getDate();
-  // Mostrar los primeros 7 días del mes si hay pocos registros del mes pasado
-  if(dia <= 7){
-    const hoy = new Date();
-    const mesPasado = new Date(hoy.getFullYear(), hoy.getMonth()-1, 1);
-    const ms = mesPasado.getFullYear()+'-'+String(mesPasado.getMonth()+1).padStart(2,'0')+'-01';
-    const me = new Date(mesPasado.getFullYear(), mesPasado.getMonth()+1, 0).toISOString().split('T')[0];
-    const tieneData = cache.finanzas.some(f=>f.fecha>=ms&&f.fecha<=me&&f.metodo_pago&&f.metodo_pago.includes('Bancolombia'));
-    if(!tieneData) banner.style.display='flex';
-  }
-}
-function belvoUpdateUI() {
-  const linkId = belvoGetLinkId();
-  const banner = document.getElementById('banco-connect-banner');
-  const info   = document.getElementById('banco-connected-info');
-  const syncBtn= document.getElementById('btn-belvo-sync');
-  const discBtn= document.getElementById('btn-belvo-disconnect');
-  const movCard= document.getElementById('banco-movimientos-card');
-  const badge  = document.getElementById('banco-sync-badge');
-  if(linkId) {
-    if(banner) banner.style.display='none';
-    if(info)   info.style.display='';
-    if(syncBtn)syncBtn.style.display='';
-    if(discBtn)discBtn.style.display='';
-    if(movCard)movCard.style.display='';
-    if(badge)  badge.style.display='';
-    const nameEl=document.getElementById('belvo-bank-name');
-    const accEl =document.getElementById('belvo-bank-account');
-    const syncEl=document.getElementById('belvo-last-sync');
-    if(nameEl) nameEl.textContent=localStorage.getItem('belvo_bank_name')||'Banco conectado';
-    if(accEl)  accEl.textContent=localStorage.getItem('belvo_bank_account')||'';
-    if(syncEl) syncEl.textContent='Última sync: '+(localStorage.getItem('belvo_last_sync')||'—');
-    // Establecer fechas por defecto (últimos 30 días)
-    const df=document.getElementById('belvo-date-from');
-    const dt=document.getElementById('belvo-date-to');
-    if(df&&!df.value){ const d=new Date(); d.setDate(d.getDate()-30); df.value=d.toISOString().split('T')[0]; }
-    if(dt&&!dt.value){ dt.value=new Date().toISOString().split('T')[0]; }
-    // Cargar movimientos automáticamente
-    belvoCargarMovimientos();
-    belvoRenderResumenDia();
-  } else {
-    if(banner) banner.style.display='';
-    if(info)   info.style.display='none';
-    if(syncBtn)syncBtn.style.display='none';
-    if(discBtn)discBtn.style.display='none';
-    if(movCard)movCard.style.display='none';
-    if(badge)  badge.style.display='none';
-  }
-}
-
-async function belvoConnect() {
-  toast('Iniciando conexión con el banco...','info');
-  try {
-    const tokenData = await belvoAPI('create_token');
-    if(!tokenData.access) {
-      toast('Error al conectar: '+(tokenData.error||'Verifica las credenciales en Netlify'),'error');
-      return;
+  const nuevos=[],modificados=[],sinCambios=[];
+  importadas.forEach(function(row){
+    const serial=(row['Serial']||'').toString().trim().toLowerCase();
+    const nombre=(row['Nombre/ID']||row['Nombre']||'').toString().trim();
+    const existing=serial?porSerial[serial]:null;
+    if(!existing){
+      nuevos.push(row);
+    } else {
+      const cambios=[];
+      if(nombre&&nombre!==existing.nombre) cambios.push('Nombre: "'+existing.nombre+'" → "'+nombre+'"');
+      if(row['Estado']&&row['Estado']!==existing.estado) cambios.push('Estado: "'+existing.estado+'" → "'+row['Estado']+'"');
+      if(row['Es Renting']&&(row['Es Renting']==='Sí')!==(!!existing.es_renting)) cambios.push('Renting: '+(existing.es_renting?'Sí':'No')+' → '+row['Es Renting']);
+      if(cambios.length) modificados.push({row,existing,cambios});
+      else sinCambios.push(row);
     }
-    // Cargar el widget de Belvo
-    const script = document.createElement('script');
-    script.src = 'https://cdn.belvo.io/belvo-website-connect.js';
-    script.onload = () => {
-      belvoWidgetCreate(tokenData.access);
-    };
-    document.head.appendChild(script);
-  } catch(e) {
-    toast('Error: '+e.message,'error');
-  }
-}
-
-function belvoWidgetCreate(accessToken) {
-  const successCb = (link, institution) => {
-    belvoSetLink(link, institution.name, institution.display_name||'');
-    toast('¡Banco '+institution.name+' conectado exitosamente! ✓');
-    belvoUpdateUI();
-    belvoSync();
-  };
-  const onExitCb = (data) => {
-    if(!belvoGetLinkId()) toast('Conexión cancelada','info');
-  };
-  belvoWidgetInitialize({ // eslint-disable-line
-    accessToken,
-    successCallbackFunction: successCb,
-    onExitCallbackFunction: onExitCb,
-    locale: 'es',
-    country_codes: ['CO'],
-    resource: 'TRANSACTIONS'
   });
-}
 
-async function belvoSync() {
-  const linkId = belvoGetLinkId();
-  if(!linkId) { toast('Primero conecta tu banco','info'); return; }
-  toast('Sincronizando con el banco...','info');
-  const df = document.getElementById('belvo-date-from')?.value;
-  const dt = document.getElementById('belvo-date-to')?.value;
-  const data = await belvoAPI('get_transactions', { link_id: linkId, date_from: df, date_to: dt });
-  if(data.error) { toast('Error sync: '+data.error,'error'); return; }
-  const txns = Array.isArray(data) ? data : (data.results||[]);
-  if(!txns.length) { toast('Sin movimientos nuevos en ese período','info'); return; }
-  // Mapear a finanzas_personales y guardar en Supabase
-  let nuevos = 0;
-  for(const tx of txns) {
-    const externalId = 'belvo_'+tx.id;
-    // No duplicar
-    if(cache.finanzas.find(f=>f.external_id===externalId)) continue;
-    const tipo = (tx.type==='INFLOW'||tx.amount>0) ? 'Ingreso' : 'Gasto';
-    const registro = {
-      descripcion: tx.description||tx.merchant?.name||'Movimiento banco',
-      tipo,
-      categoria: belvoMapCategoria(tx.category, tipo),
-      valor: Math.abs(tx.amount),
-      fecha: tx.value_date||tx.accounting_date||new Date().toISOString().split('T')[0],
-      metodo_pago: 'Banco',
-      external_id: externalId
-    };
-    try {
-      const saved = await dbInsert('finanzas_personales', registro);
-      if(saved&&saved.length) { cache.finanzas.unshift(saved[0]); nuevos++; }
-    } catch(e) { console.warn('Error guardando tx:', e); }
+  let html='<div style="padding:20px;max-height:70vh;overflow-y:auto">';
+  html+='<h3 style="margin:0 0 16px;font-size:16px">📊 Comparación de Inventario</h3>';
+  html+='<div style="display:flex;gap:12px;margin-bottom:16px">';
+  html+='<div style="background:#E8F5E9;border-radius:8px;padding:10px 16px;text-align:center"><div style="font-size:22px;font-weight:800;color:#2E7D32">'+nuevos.length+'</div><div style="font-size:11px;color:#388E3C">Nuevos</div></div>';
+  html+='<div style="background:#FFF3E0;border-radius:8px;padding:10px 16px;text-align:center"><div style="font-size:22px;font-weight:800;color:#E65100">'+modificados.length+'</div><div style="font-size:11px;color:#EF6C00">Modificados</div></div>';
+  html+='<div style="background:#F1F8E9;border-radius:8px;padding:10px 16px;text-align:center"><div style="font-size:22px;font-weight:800;color:#558B2F">'+sinCambios.length+'</div><div style="font-size:11px;color:#7CB342">Sin cambios</div></div>';
+  html+='</div>';
+
+  if(nuevos.length){
+    html+='<div style="margin-bottom:14px"><div style="font-size:13px;font-weight:700;color:#2E7D32;margin-bottom:6px">✅ Equipos nuevos (no están en la BD):</div>';
+    html+='<div style="background:#F9FBE7;border-radius:6px;padding:8px">';
+    nuevos.forEach(function(r){ html+='<div style="font-size:12px;padding:3px 0;border-bottom:1px solid #eee">• '+(r['Nombre/ID']||r['Nombre']||'?')+' — '+(r['Empresa']||'')+' '+(r['Serial']?'<span style="font-family:monospace;font-size:11px;color:var(--gray)">S/N: '+r['Serial']+'</span>':'')+'</div>'; });
+    html+='</div></div>';
   }
-  localStorage.setItem('belvo_last_sync', new Date().toLocaleString('es-CO'));
-  const syncEl=document.getElementById('belvo-last-sync');
-  if(syncEl) syncEl.textContent='Última sync: '+localStorage.getItem('belvo_last_sync');
-  toast(nuevos>0?nuevos+' movimientos importados ✓':'Todo al día ✓');
-  belvoCargarMovimientos();
-  belvoRenderResumenDia();
+  if(modificados.length){
+    html+='<div style="margin-bottom:14px"><div style="font-size:13px;font-weight:700;color:#E65100;margin-bottom:6px">⚠️ Equipos con diferencias:</div>';
+    modificados.forEach(function(m){ html+='<div style="background:#FFF8E1;border-radius:6px;padding:7px 10px;margin-bottom:6px;font-size:12px"><strong>'+m.existing.nombre+'</strong> (S/N: '+(m.existing.serial||'—')+')<br><span style="color:#BF360C">'+m.cambios.join(' | ')+'</span></div>'; });
+    html+='</div>';
+  }
+  if(!nuevos.length&&!modificados.length){
+    html+='<div style="text-align:center;padding:20px;color:var(--gray)">✅ El inventario importado coincide perfectamente con la base de datos.</div>';
+  }
+  html+='<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px">';
+  html+='<button onclick="closeModal()" class="btn btn-ghost">Cerrar</button>';
+  html+='</div></div>';
+
+  document.getElementById('modal-title').textContent='Comparación Inventario Excel';
+  document.getElementById('modal-body').innerHTML=html;
+  document.getElementById('modal-overlay').style.display='flex';
 }
 
-function belvoMapCategoria(cat, tipo) {
-  if(!cat) return tipo==='Ingreso'?'Freelance':'Otros';
-  const c = cat.toUpperCase();
-  if(c.includes('FOOD')||c.includes('RESTAURANT')) return 'Comidas';
-  if(c.includes('TRANSPORT')||c.includes('FUEL'))  return 'Otros';
-  if(c.includes('INCOME')||c.includes('SALARY'))   return 'Salario';
-  if(c.includes('ENTERTAIN'))                       return 'Entretenimiento';
-  if(c.includes('HEALTH')||c.includes('MEDICAL'))  return 'Salud';
-  if(c.includes('EDUCATION'))                       return 'Educacion';
-  return tipo==='Ingreso'?'Freelance':'Otros';
-}
 
-async function belvoCargarMovimientos() {
-  const linkId = belvoGetLinkId();
-  if(!linkId) return;
-  const df = document.getElementById('belvo-date-from')?.value;
-  const dt = document.getElementById('belvo-date-to')?.value;
-  const data = await belvoAPI('get_transactions', { link_id: linkId, date_from: df, date_to: dt });
-  const txns = Array.isArray(data)?data:(data.results||[]);
-  const el = document.getElementById('banco-movimientos-list');
-  if(!el) return;
-  if(!txns.length){ el.innerHTML=emptyHTML('📭','Sin movimientos en este período'); return; }
-  el.innerHTML='<div class="table-wrap"><table><thead><tr><th>Fecha</th><th>Descripción</th><th>Tipo</th><th>Valor</th><th>Categoría</th></tr></thead><tbody>'+
-    txns.slice(0,50).map(tx=>{
-      const tipo=tx.type==='INFLOW'||tx.amount>0?'Ingreso':'Gasto';
-      return '<tr>'+
-        '<td>'+fmtDate(tx.value_date||tx.accounting_date)+'</td>'+
-        '<td><strong>'+(tx.description||tx.merchant?.name||'—')+'</strong></td>'+
-        '<td>'+(tipo==='Ingreso'?'<span class="badge badge-green">⬆ Ingreso</span>':'<span class="badge badge-red">⬇ Gasto</span>')+'</td>'+
-        '<td style="font-weight:700;color:'+(tipo==='Ingreso'?'var(--success)':'var(--danger)')+'">'+fmt(Math.abs(tx.amount))+'</td>'+
-        '<td>'+(tx.category||'—')+'</td>'+
-      '</tr>';
-    }).join('')+'</tbody></table></div>';
-}
-
-function belvoRenderResumenDia() {
-  const ayer = new Date(); ayer.setDate(ayer.getDate()-1);
-  const ayerStr = ayer.toISOString().split('T')[0];
-  const movAyer = cache.finanzas.filter(f=>f.fecha===ayerStr);
-  const entro = movAyer.filter(f=>f.tipo==='Ingreso').reduce((s,f)=>s+(+f.valor||0),0);
-  const gasto = movAyer.filter(f=>f.tipo==='Gasto').reduce((s,f)=>s+(+f.valor||0),0);
-  const balance = entro - gasto;
-  const cont = document.getElementById('resumen-dia-container');
-  const grid = document.getElementById('resumen-dia-grid');
-  if(!cont||!grid) return;
-  if(!movAyer.length){ cont.style.display='none'; return; }
-  cont.style.display='';
-  grid.innerHTML=
-    '<div class="resumen-dia-item"><div class="val">'+fmt(entro)+'</div><div class="lbl">Entró ayer</div></div>'+
-    '<div class="resumen-dia-item"><div class="val">'+fmt(gasto)+'</div><div class="lbl">Gastaste ayer</div></div>'+
-    '<div class="resumen-dia-item"><div class="val" style="color:'+(balance>=0?'#81C784':'#EF9A9A')+'">'+fmt(balance)+'</div><div class="lbl">Balance ayer</div></div>';
-}
-
-async function belvoDisconnect() {
-  if(!confirm('¿Desconectar el banco? Los movimientos importados se conservan.')) return;
-  const linkId = belvoGetLinkId();
-  if(linkId) await belvoAPI('delete_link', { link_id: linkId }).catch(()=>{});
-  localStorage.removeItem('belvo_link_id');
-  localStorage.removeItem('belvo_bank_name');
-  localStorage.removeItem('belvo_bank_account');
-  localStorage.removeItem('belvo_last_sync');
-  belvoUpdateUI();
-  toast('Banco desconectado','info');
-}
-
-// Mostrar nav banco para admin y renderizar al entrar
-function belvoInit() { /* nav banco ya visible por default para admin */ }
 
 // ═══════════════════════════════════════════════════════════
 // IMPORTAR EXTRACTO BANCOLOMBIA
@@ -3583,6 +3570,9 @@ async function guardarExtracto(){
   cerrarImportarExtracto();
   renderPage('finanzas');
   toast(ok+' movimientos importados ✓'+(err?' ('+err+' errores)':''));
+  await loadAll('finanzas');
+  if(curPage==='banco') renderExtractoBancario();
+  else renderPage('finanzas');
 }
 
 function renderResumenAnual(){
@@ -3781,13 +3771,7 @@ function renderFinanzasDashboard() {
     }).join('') : '<div style="color:var(--gray);font-size:12px">Sin gastos registrados</div>')
     +'</div></div></div>'
 
-    // RECONCILIACIÓN: cobros vs pagos
-    +'<div class="card" style="margin-bottom:0"><div class="card-header" style="background:linear-gradient(135deg,#0D1B2A,#1A3A5C);border-radius:9px 9px 0 0">'
-    +'<span class="card-title" style="color:#fff">🔍 Cobros vs Pagos recibidos</span>'
-    +'<span style="font-size:11px;color:rgba(255,255,255,.6)">Cruza lo que te deben con lo que entró al banco</span>'
-    +'</div><div class="card-body" id="finanzas-reconciliacion"></div></div>';
-
-  renderReconciliacion(mesFilter);
+  // Reconciliación movida a módulo Extracto Bancario
 }
 
 function renderReconciliacion(mesFilter) {
@@ -3872,6 +3856,281 @@ function renderReconciliacion(mesFilter) {
 
   el.innerHTML = h;
 }
+// ═══════════════════════════════════════════════════════════
+// EXTRACTO BANCARIO — Módulo de importación y conciliación
+// ═══════════════════════════════════════════════════════════
+
+function switchBancoTab(tab){
+  ['movimientos','conciliacion'].forEach(function(t){
+    var el = document.getElementById('banco-tab-'+t);
+    if(el) el.style.display = t===tab ? '' : 'none';
+  });
+  document.querySelectorAll('#banco-tabs .tab-btn').forEach(function(b,i){
+    b.classList.toggle('active', (i===0&&tab==='movimientos')||(i===1&&tab==='conciliacion'));
+  });
+  if(tab==='conciliacion') renderConciliacion();
+}
+
+function renderExtractoBancario(){
+  // Poblar selector de meses
+  var selMes = document.getElementById('filter-banco-mes');
+  if(selMes && selMes.options.length<=1){
+    var meses = new Set((cache.finanzas||[]).map(function(f){ return (f.fecha||'').slice(0,7); }).filter(Boolean));
+    [...meses].sort().reverse().forEach(function(m){
+      var o=document.createElement('option'); o.value=m;
+      var p=m.split('-'); var nm=['','Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+      o.text=nm[+p[1]]+' '+p[0]; selMes.appendChild(o);
+    });
+  }
+
+  var mesFilter = (document.getElementById('filter-banco-mes')||{}).value||'';
+  var tipoFilter= (document.getElementById('filter-banco-tipo')||{}).value||'';
+  var estFilter = (document.getElementById('filter-banco-estado')||{}).value||'';
+  var search    = ((document.getElementById('search-banco')||{}).value||'').toLowerCase();
+
+  var rows = (cache.finanzas||[]).slice();
+  if(mesFilter)  rows = rows.filter(function(f){ return (f.fecha||'').startsWith(mesFilter); });
+  if(tipoFilter) rows = rows.filter(function(f){ return f.tipo===tipoFilter; });
+  if(estFilter==='conciliado')  rows = rows.filter(function(f){ return !!f.cobro_id; });
+  if(estFilter==='pendiente')   rows = rows.filter(function(f){ return f.tipo==='Ingreso' && !f.cobro_id; });
+  if(search) rows = rows.filter(function(f){ return (f.descripcion||'').toLowerCase().includes(search); });
+
+  // Summary cards
+  var allExtracto = (cache.finanzas||[]);
+  var ingresos  = allExtracto.filter(function(f){ return f.tipo==='Ingreso'; });
+  var cruzados  = ingresos.filter(function(f){ return !!f.cobro_id; });
+  var sinCruzar = ingresos.filter(function(f){ return !f.cobro_id; });
+  var sumEl = document.getElementById('banco-summary');
+  if(sumEl) sumEl.innerHTML =
+    statCard('Movimientos', allExtracto.length, 'importados','blue','🏦')+
+    statCard('Ingresos', fmt(ingresos.reduce(function(s,f){ return s+(+f.valor||0);},0)),'entradas','green','⬆')+
+    statCard('Cruzados', cruzados.length, 'con cobros','teal','✅')+
+    statCard('Sin cruzar', sinCruzar.length, 'ingresos pendientes', sinCruzar.length>0?'orange':'green','🔍');
+
+  // Tabla
+  var tbody = document.getElementById('tbody-banco');
+  if(!tbody) return;
+  if(!rows.length){
+    tbody.innerHTML='<tr><td colspan="6">'+emptyHTML('🏦','Sin movimientos importados. Usa "📥 Importar Extracto" para comenzar.')+'</td></tr>';
+    return;
+  }
+  tbody.innerHTML = rows.map(function(r){
+    var cruzado = r.cobro_id;
+    var cobro = cruzado ? (cache.cobros||[]).find(function(c){ return c.id===r.cobro_id; }) : null;
+    var estadoHTML = cruzado
+      ? '<span class="badge badge-teal">✅ Cruzado'+(cobro?': '+empNombre(cobro.empresa_id):'')+'</span>'
+      : (r.tipo==='Ingreso' ? '<span class="badge badge-yellow">⏳ Sin cruzar</span>' : '<span class="badge badge-gray">—</span>');
+    return '<tr>'
+      +'<td>'+fmtDate(r.fecha)+'</td>'
+      +'<td><strong style="max-width:200px;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+r.descripcion+'</strong></td>'
+      +'<td>'+(r.tipo==='Ingreso'?badge('⬆ Ingreso','green'):badge('⬇ Gasto','red'))+'</td>'
+      +'<td>'+badge(r.categoria||'—','purple')+'</td>'
+      +'<td style="text-align:right;font-weight:700;color:'+(r.tipo==='Ingreso'?'var(--success)':'var(--danger)')+'">'+fmt(r.valor)+'</td>'
+      +'<td>'+estadoHTML+'</td>'
+      +'</tr>';
+  }).join('');
+}
+
+// ─────────────────────────────────────────────
+// CONCILIACIÓN AUTOMÁTICA
+// ─────────────────────────────────────────────
+function renderConciliacion(){
+  var el = document.getElementById('conciliacion-content');
+  if(!el) return;
+
+  var ingresos = (cache.finanzas||[]).filter(function(f){
+    return f.tipo==='Ingreso' && !f.cobro_id;
+  });
+
+  var cobros = (cache.cobros||[]).filter(function(c){
+    return ['Pendiente','En Proceso','Vencido','Parcial'].includes(c.estado);
+  });
+
+  if(!ingresos.length && !cobros.length){
+    el.innerHTML='<div style="text-align:center;padding:40px;color:var(--gray)">'+
+      '<div style="font-size:42px;margin-bottom:10px">✅</div>'+
+      '<p style="font-size:15px;font-weight:700">Todo conciliado</p>'+
+      '<p style="font-size:13px">Sin cobros pendientes o sin ingresos sin cruzar.</p></div>';
+    return;
+  }
+
+  // Ejecutar matching automático (solo sugiere, no confirma)
+  var sugerencias = autoMatch(ingresos, cobros);
+
+  var h = '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px">'
+    +'<div>'
+      +'<h3 style="font-size:15px;font-weight:800;margin-bottom:2px">🔍 Motor de Conciliación</h3>'
+      +'<p style="font-size:12px;color:var(--gray)">'+sugerencias.length+' sugerencia(s) encontrada(s) · '+ingresos.length+' ingreso(s) sin cruzar · '+cobros.length+' cobro(s) pendiente(s)</p>'
+    +'</div>'
+    +'<button class="btn btn-primary" onclick="confirmarTodosSugeridos()">✅ Confirmar todos los matches</button>'
+    +'</div>';
+
+  if(!sugerencias.length && ingresos.length){
+    h += '<div style="background:var(--warning-light);border:1px solid var(--warning);border-radius:10px;padding:14px;margin-bottom:16px;font-size:13px">'
+      +'<strong>⚠️ Sin coincidencias automáticas.</strong> Los valores y fechas no coinciden dentro del margen (±5% de valor, ±30 días). Puedes cruzar manualmente desde la lista de cobros.</div>';
+  }
+
+  // Sugerencias de cruce
+  if(sugerencias.length){
+    h += '<div class="card" style="margin-bottom:16px">'
+      +'<div class="card-header" style="background:linear-gradient(135deg,#0D1B2A,#1A3A5C)">'
+      +'<span class="card-title" style="color:#fff">🤖 Matches sugeridos ('+sugerencias.length+')</span>'
+      +'<span style="font-size:11px;color:rgba(255,255,255,.6)">Valor ±5% · Fecha ±30 días</span></div>'
+      +'<div class="card-body" style="padding:0">';
+    sugerencias.forEach(function(s,i){
+      var pctDiff = Math.round(Math.abs(s.finanza.valor - s.cobro.valor) / s.cobro.valor * 100);
+      h += '<div style="display:grid;grid-template-columns:1fr auto 1fr auto;gap:12px;align-items:center;padding:14px 16px;border-bottom:1px solid var(--border)">'
+        // Ingreso del extracto
+        +'<div style="background:#E6F4EA;border-radius:8px;padding:10px;border-left:3px solid var(--success)">'
+        +'<div style="font-size:10px;color:var(--gray);font-weight:700;text-transform:uppercase;margin-bottom:3px">EXTRACTO</div>'
+        +'<div style="font-size:13px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+s.finanza.descripcion+'</div>'
+        +'<div style="font-size:11px;color:var(--gray)">'+fmtDate(s.finanza.fecha)+' · '+s.finanza.metodo_pago+'</div>'
+        +'<div style="font-size:15px;font-weight:900;color:var(--success);margin-top:3px">'+fmt(s.finanza.valor)+'</div>'
+        +'</div>'
+        // Flecha
+        +'<div style="text-align:center;font-size:18px;color:var(--primary)">↔</div>'
+        // Cobro
+        +'<div style="background:var(--primary-light);border-radius:8px;padding:10px;border-left:3px solid var(--primary)">'
+        +'<div style="font-size:10px;color:var(--gray);font-weight:700;text-transform:uppercase;margin-bottom:3px">COBRO</div>'
+        +'<div style="font-size:13px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+s.cobro.descripcion+'</div>'
+        +'<div style="font-size:11px;color:var(--gray)">'+empNombre(s.cobro.empresa_id)+'</div>'
+        +'<div style="font-size:15px;font-weight:900;color:var(--primary);margin-top:3px">'+fmt(s.cobro.valor)+'</div>'
+        +(pctDiff>0?'<div style="font-size:10px;color:var(--gray)">Diferencia: '+pctDiff+'%</div>':'')
+        +'</div>'
+        // Botones
+        +'<div style="display:flex;flex-direction:column;gap:6px">'
+        +'<button class="btn btn-success" style="font-size:12px;padding:6px 12px" data-cid="'+s.cobro.id+'" data-fid="'+s.finanza.id+'" onclick="confirmarMatch(this.dataset.cid,this.dataset.fid)">✅ Confirmar</button>'
+        +'<button class="btn btn-ghost" style="font-size:12px;padding:6px 12px" data-fid="'+s.finanza.id+'" onclick="rechazarMatch(this.dataset.fid)">✕ Ignorar</button>'
+        +'</div>'
+        +'</div>';
+    });
+    h += '</div></div>';
+  }
+
+  // Cobros sin match
+  var cobrosLibres = cobros.filter(function(c){
+    return !sugerencias.find(function(s){ return s.cobro.id===c.id; });
+  });
+  if(cobrosLibres.length){
+    h += '<div class="card"><div class="card-header"><span class="card-title">⏳ Cobros pendientes sin match ('+cobrosLibres.length+')</span></div>'
+      +'<div class="card-body" style="padding:0"><div class="table-wrap"><table><thead><tr><th>Descripción</th><th>Empresa</th><th>Valor</th><th>Vencimiento</th><th>Estado</th></tr></thead><tbody>'
+      +cobrosLibres.map(function(c){
+        return '<tr><td><strong>'+c.descripcion+'</strong></td><td>'+empNombre(c.empresa_id)+'</td>'
+          +'<td style="font-weight:700;color:var(--orange)">'+fmt(c.valor)+'</td>'
+          +'<td>'+diasCobro(c.fecha_vencimiento,c.estado)+'</td>'
+          +'<td>'+estatusBadge(c.estado,'cobro')+'</td></tr>';
+      }).join('')
+      +'</tbody></table></div></div></div>';
+  }
+
+  el.innerHTML = h;
+  // Guardar sugerencias para "confirmar todos"
+  window._matchSugerencias = sugerencias;
+}
+
+function autoMatch(ingresos, cobros){
+  var sugerencias = [];
+  var usadosCobros = new Set();
+  var usadosFinanzas = new Set();
+
+  // Keywords que indican consignaciones internas (NO pagos de clientes)
+  var ignorarDesc = ['nomina','salario','sueldo','transferencia cta','transf cta','consig cta',
+    'transf entre','entre cuentas','retiro','cajero','atm','cuota de manejo','4x1000',
+    'gravamen','impuesto','seguro','aval','prima'];
+
+  ingresos.forEach(function(f){
+    if(usadosFinanzas.has(f.id)) return;
+    // Saltar consignaciones propias y nómina
+    var dLow = (f.descripcion||'').toLowerCase();
+    var esConsignacionInterna = ignorarDesc.some(function(k){ return dLow.includes(k); });
+    if(esConsignacionInterna) return;
+    var fechaF = new Date(f.fecha+'T12:00:00');
+    var mejorMatch = null, mejorScore = Infinity;
+
+    cobros.forEach(function(c){
+      if(usadosCobros.has(c.id)) return;
+      // Diferencia de valor ≤ 5%
+      var difVal = Math.abs(+f.valor - +c.valor) / Math.max(+c.valor,1);
+      if(difVal > 0.05) return;
+      // Diferencia de fecha ≤ 30 días
+      var fechaRef = c.fecha_vencimiento || c.fecha_emision || '';
+      if(!fechaRef) return;
+      var fechaC = new Date(fechaRef+'T12:00:00');
+      var difDias = Math.abs((fechaF - fechaC) / 86400000);
+      if(difDias > 30) return;
+      // Score: menor = mejor
+      var score = difVal * 100 + difDias;
+      if(score < mejorScore){ mejorScore = score; mejorMatch = c; }
+    });
+
+    if(mejorMatch){
+      sugerencias.push({ finanza: f, cobro: mejorMatch });
+      usadosCobros.add(mejorMatch.id);
+      usadosFinanzas.add(f.id);
+    }
+  });
+  return sugerencias;
+}
+
+async function confirmarMatch(cobroId, finanzaId){
+  loading(true);
+  try {
+    var hoy = new Date().toISOString().split('T')[0];
+    var finanza = (cache.finanzas||[]).find(function(f){ return f.id===finanzaId; });
+    var fechaPago = finanza ? finanza.fecha : hoy;
+
+    // 1. Actualizar cobro -> Cobrado
+    await dbUpdate('cobros', cobroId, { estado:'Cobrado', fecha_pago: fechaPago, updated_at: new Date().toISOString() });
+    // 2. Marcar finanza como cruzada
+    await dbUpdate('finanzas_personales', finanzaId, { cobro_id: cobroId, conciliado: true, updated_at: new Date().toISOString() });
+
+    // 3. Actualizar caché local
+    if(cache.cobros){ var ci=cache.cobros.findIndex(function(c){ return c.id===cobroId; }); if(ci>=0){ cache.cobros[ci].estado='Cobrado'; cache.cobros[ci].fecha_pago=fechaPago; } }
+    if(cache.finanzas){ var fi=cache.finanzas.findIndex(function(f){ return f.id===finanzaId; }); if(fi>=0){ cache.finanzas[fi].cobro_id=cobroId; cache.finanzas[fi].conciliado=true; } }
+
+    toast('✅ Cruce confirmado — cobro marcado como Cobrado');
+    renderConciliacion();
+    renderExtractoBancario();
+  } catch(e){ toast('Error: '+e.message,'error'); }
+  finally { loading(false); }
+}
+
+async function confirmarTodosSugeridos(){
+  var sugerencias = window._matchSugerencias || [];
+  if(!sugerencias.length){ toast('Sin sugerencias para confirmar','info'); return; }
+  if(!confirm('¿Confirmar '+sugerencias.length+' cruce(s)? Los cobros quedarán marcados como Cobrados.')) return;
+  loading(true);
+  var ok=0;
+  for(var s of sugerencias){
+    try {
+      await confirmarMatchSilent(s.cobro.id, s.finanza.id);
+      ok++;
+    } catch(e){ console.warn('Error en match:', e); }
+  }
+  loading(false);
+  toast('✅ '+ok+' cruce(s) confirmado(s)');
+  renderConciliacion();
+  renderExtractoBancario();
+}
+
+async function confirmarMatchSilent(cobroId, finanzaId){
+  var finanza = (cache.finanzas||[]).find(function(f){ return f.id===finanzaId; });
+  var fechaPago = finanza ? finanza.fecha : new Date().toISOString().split('T')[0];
+  await dbUpdate('cobros', cobroId, { estado:'Cobrado', fecha_pago: fechaPago, updated_at: new Date().toISOString() });
+  await dbUpdate('finanzas_personales', finanzaId, { cobro_id: cobroId, conciliado: true, updated_at: new Date().toISOString() });
+  if(cache.cobros){ var ci=cache.cobros.findIndex(function(c){ return c.id===cobroId; }); if(ci>=0){ cache.cobros[ci].estado='Cobrado'; cache.cobros[ci].fecha_pago=fechaPago; } }
+  if(cache.finanzas){ var fi=cache.finanzas.findIndex(function(f){ return f.id===finanzaId; }); if(fi>=0){ cache.finanzas[fi].cobro_id=cobroId; cache.finanzas[fi].conciliado=true; } }
+}
+
+function rechazarMatch(finanzaId){
+  // Solo marcar en memoria para no volver a sugerir en esta sesión
+  window._matchesIgnorados = window._matchesIgnorados || new Set();
+  window._matchesIgnorados.add(finanzaId);
+  renderConciliacion();
+  toast('Ignorado — no se volverá a sugerir este cruce','info');
+}
+
+
 </script>
 
 <!-- SETTINGS OVERLAY -->
@@ -3920,4 +4179,42 @@ function renderReconciliacion(mesFilter) {
 
 
 <!-- REPORTE EMPRESA MODAL -->
-<div id="reporte-empresa-modal" style="position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:6000;display:none;al
+<div id="reporte-empresa-modal" style="position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:6000;display:none;align-items:flex-start;justify-content:center;padding:20px;overflow-y:auto" onclick="if(event.target===this)closeReporteEmpresa()">
+  <div style="background:var(--white);border-radius:14px;padding:24px;width:min(680px,95vw);margin:auto">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+      <h3 id="rpt-emp-titulo" style="font-size:16px;font-weight:800">📄 Reporte de Empresa</h3>
+      <button onclick="closeReporteEmpresa()" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--gray)">✕</button>
+    </div>
+    <div id="rpt-emp-share" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px"></div>
+    <div id="rpt-emp-body" style="font-size:13px;line-height:1.7"></div>
+  </div>
+</div>
+
+<!-- USERS MANAGEMENT MODAL -->
+<div id="users-modal" style="position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:6000;display:none;align-items:center;justify-content:center" onclick="if(event.target===this)closeUsersModal()">
+  <div style="background:var(--white);border-radius:14px;padding:24px;width:min(560px,95vw);max-height:90vh;overflow-y:auto">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+      <h3 style="font-size:16px;font-weight:800">👥 Gestión de Usuarios</h3>
+      <button onclick="closeUsersModal()" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--gray)">✕</button>
+    </div>
+    <div style="background:var(--primary-light);border-left:3px solid var(--primary);padding:10px 12px;border-radius:6px;margin-bottom:16px;font-size:12px;color:var(--primary-dark)">
+      💡 <strong>Roles:</strong> Admin = acceso total · Técnico = sin módulos financieros · Consulta = solo lectura
+    </div>
+    <div id="users-list"></div>
+    <div style="margin-top:14px">
+      <button onclick="showUserForm(null)" style="width:100%;padding:10px;background:var(--success);color:#fff;border:none;border-radius:8px;cursor:pointer;font-weight:700;font-size:13px">➕ Agregar nuevo usuario</button>
+    </div>
+    <div id="user-form-area" style="display:none"></div>
+  </div>
+</div>
+
+
+<!-- REPUESTOS PICKER MODAL -->
+<div id="repuestos-picker-modal" style="position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:7500;display:none;align-items:center;justify-content:center" onclick="if(event.target===this)closeRepuestosPicker()">
+  <div style="background:var(--white);border-radius:14px;width:min(480px,95vw);max-height:80vh;overflow:hidden;display:flex;flex-direction:column">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--border)"><strong style="font-size:15px">📦 Agregar repuesto</strong><button onclick="closeRepuestosPicker()" style="background:none;border:none;font-size:20px;cursor:pointer">✕</button></div>
+    <div id="picker-lista" style="overflow-y:auto;flex:1"></div>
+  </div>
+</div>
+</body>
+</html>
